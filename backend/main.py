@@ -2,12 +2,14 @@ from fastapi import FastAPI
 from app.database import engine
 from app.models import Base
 from app.routes import resume, job_description
+from app.routes import analysis
 
 app = FastAPI()
 
 Base.metadata.create_all(bind=engine)
 app.include_router(resume.router, prefix="/api/resume", tags=["resume"])
 app.include_router(job_description.router, prefix="/api/job-description", tags=["job-description"])
+app.include_router(analysis.router, prefix="/api/analysis", tags=["analysis"])
 
 @app.get("/")
 def root():
