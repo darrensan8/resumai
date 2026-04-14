@@ -21,11 +21,16 @@ export default function UploadJobDescription() {
     setIsLoading(true)
     setError('')
 
+    const sessionId = localStorage.getItem('session_id')
+
+
     try {
       await axios.post(
         `${API_URL}/api/job-description/upload-job-description`,
         { job_description: jobDescription },
-        { withCredentials: true }
+        { withCredentials: true 
+            , headers: { 'X-Session-ID': sessionId }
+        }
       )
       navigate('/analysis')
     } catch (err) {
