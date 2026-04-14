@@ -6,6 +6,18 @@ from app.routes import analysis, get_resume, resume, job_description
 
 app = FastAPI()
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5174",
+        "http://localhost:3000",
+        "https://resumai.vercel.app",  # add your Vercel URL here later
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 Base.metadata.create_all(bind=engine)
 app.include_router(resume.router, prefix="/api/resume", tags=["resume"])
 app.include_router(job_description.router, prefix="/api/job-description", tags=["job-description"])
