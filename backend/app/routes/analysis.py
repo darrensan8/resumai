@@ -29,11 +29,15 @@ async def analyze(
     if not job_desc:
         raise HTTPException(status_code=400, detail="No job description found. Please upload a job description first.")
 
-    # delete cached analysis so every run is fresh
     existing_score = db.query(AnalysisScores).filter(AnalysisScores.session_id == effective_session_id).first()
     if existing_score:
         db.delete(existing_score)
-        db.commit()
+
+    existing_feedback = db.query(ResumeFeedback).filter(ResumeFeedback.session_id == effective_session_id).first()
+    if existing_feedback:
+        db.delete(existing_feedback)
+
+    db.commit()
 
     try:
         analysis = analyze_resume(resume.resume_text, job_desc.job_description, request.role_level)
