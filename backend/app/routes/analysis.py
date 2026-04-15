@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Cookie, HTTPException
+from fastapi import APIRouter, Depends, Cookie, HTTPException, Header
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models import Resume, JobDescription, AnalysisScores, ResumeFeedback
@@ -14,7 +14,7 @@ class AnalysisRequest(BaseModel):
 async def analyze(
     request: AnalysisRequest,
     session_id: str = Cookie(default=None),
-    x_session_id: str = None,
+    x_session_id: str = Header(default=None),
     db: Session = Depends(get_db)
 ):
     effective_session_id = session_id or x_session_id
@@ -31,25 +31,18 @@ async def analyze(
 
     existing_score = db.query(AnalysisScores).filter(AnalysisScores.session_id == effective_session_id).first()
     if existing_score:
-        db.delete(existing_score)
-
-    existing_feedback = db.query(ResumeFeedback).filter(ResumeFeedback.session_id == effective_session_id).first()
-    if existing_feedback:
-        db.delete(existing_feedback)
-
-    db.commit()
+        return existing_score.analysis_data
 
     try:
         analysis = analyze_resume(resume.resume_text, job_desc.job_description, request.role_level)
     except ValueError as e:
         raise HTTPException(status_code=500, detail=str(e))
-
+    
     new_score = AnalysisScores(
         session_id=effective_session_id,
         analysis_data=analysis
     )
     db.add(new_score)
-
     new_feedback = ResumeFeedback(
         session_id=effective_session_id,
         improvements_data=analysis.get("improvements", [])
