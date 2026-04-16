@@ -64,8 +64,9 @@ export default function Analysis() {
       <div style={styles.header}>
         <h1 style={styles.title}>ResumAI</h1>
         <button style={styles.restartButton} onClick={() => {
+            document.cookie = "session_id=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;"
             localStorage.removeItem('session_id')
-                navigate('/')
+            navigate('/')
                     }}>
                 Analyze Another
         </button>

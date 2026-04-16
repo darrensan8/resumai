@@ -29,24 +29,26 @@ async def analyze(
     if not job_desc:
         raise HTTPException(status_code=400, detail="No job description found. Please upload a job description first.")
 
-    existing_score = db.query(AnalysisScores).filter(AnalysisScores.session_id == effective_session_id).first()
-    if existing_score:
-        return existing_score.analysis_data
-
     try:
         analysis = analyze_resume(resume.resume_text, job_desc.job_description, request.role_level)
     except ValueError as e:
         raise HTTPException(status_code=500, detail=str(e))
     
-    new_score = AnalysisScores(
-        session_id=effective_session_id,
-        analysis_data=analysis
-    )
-    db.add(new_score)
+    existing_score = db.query(AnalysisScores).filter(AnalysisScores.session_id == effective_session_id).first()
+    if existing_score:
+        existing_score.analysis_data = analysis
+    else:
+        db.add(AnalysisScores(
+            session_id=effective_session_id,
+            analysis_data=analysis
+        ))
+
     existing_feedback = db.query(ResumeFeedback).filter(
         ResumeFeedback.session_id == effective_session_id
     ).first()
-    if not existing_feedback:
+    if existing_feedback:
+        existing_feedback.improvements_data = analysis.get("improvements", [])
+    else:
         db.add(ResumeFeedback(
             session_id=effective_session_id,
             improvements_data=analysis.get("improvements", [])
